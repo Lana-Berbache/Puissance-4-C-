@@ -1,0 +1,633 @@
+// ce programme est composé dans l'ordre des fonctions suivante:
+//1-initialise
+//2-affiche
+//3-joue
+//4-demande_et_joue
+//5-compte
+//6-plein
+//7-est_ce_gagne
+//8-risque_gagner_joueur_jaune
+//9-demande_et_joue_lordinateur
+//10-demande_et_joue_lordinateur_max
+//11-demande_et_joue_deux_ordinateurs
+//12-main()
+
+
+#include <iostream>
+#include <cstdlib>
+#include <ctime>
+#include<array>
+using namespace std;
+
+
+
+ enum Couleur{vide, rouge, jaune}   ;//limiter le nombre delement que une case de la grille peut prendre
+ typedef array<array<Couleur, 7>, 6> Grille;//
+ Grille grille; //on crée une variable de type Grille pour pouvoir la modifier
+
+
+
+//debut fonction initialise
+
+            void initialise(Grille& grille)
+                {
+                     for(auto &ligne : grille) //auto c pour parcourir chacune des lignes
+                      {
+                         for(auto &kase : ligne)// case est reserve en c++ jutilise le terme kase
+                          {
+                          kase=vide;
+                          }
+                        }
+                    }
+// fin fonction initialise
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// debut fonction affiche : affichage o pour case rouge et x pour case jaune
+
+              void affiche(const Grille&  grille)
+               {
+                  cout<< endl;
+                  for(auto ligne : grille)//on sait le nombre de ligne qu on a alors on utilise auto: c_a_d pour chacune des lignes
+                   {   cout<< "|";
+                       for(auto kase: ligne)
+                       {
+                         if(kase==vide)
+                            {cout<<" ";} else if (kase==rouge)
+                            {cout <<"o";} else
+                            {cout<<"x"; } cout<<"|";
+
+                        } cout << endl;
+                    }
+
+                    cout<<"=";
+                    for(size_t i(1); i<=grille[0].size(); i++)
+                       {
+                        cout<<"="<<i;
+                        }
+                   cout<<"==";
+                   cout<<endl << endl;
+
+                 }
+
+    //fin fonction affiche
+
+
+  /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// debut  fonction joue
+
+//fonction joue et valider le coup joué couleur ici c le joueur ex joue(grille, 3, rouge)
+//collone ici va de 0 jusqua 6 pas de 1 jusqua 7 donc au lieu de int colonne on utilise le type size_t colonne
+//la grille ici sera modifié apres avoir joué alors on utilise le passage par reference &
+
+      bool joue(Grille& grille, size_t colonne, Couleur couleur)
+           {
+                        //si le numéro de colonne n'est pas valide, le coup n'est pas valide:
+                        if (colonne>=grille[0].size())
+                             {return false; }
+                          // on parcourt la colonne en partant du bas on donne un indice ligne pour parcourir les lignes qui va du bas = taille de tableau-1
+                         size_t ligne(grille.size()-1);//jusqua trouver une case vide
+                         bool remplie(false);    //verifeier si une colonne est pleine
+                         while((! remplie) && (grille[ligne][colonne]!=vide))
+                                {
+                                    if(ligne==0)
+                                       {
+                                         remplie=true;
+                                       }
+                                    else
+                                       {
+                                         --ligne;
+                                        }
+                                  }
+                             //on remplit la case vide trouvée
+                             //si on nest pas arrivé jusqu'en haut de la colonne, on remplit la case vide trouvé et on rtourne tru
+                             //sinon cest que la colonne est pleine et le coup nest pas valide et on retourne false
+                        if(!remplie)
+                           {
+                             grille[ligne][colonne]=couleur;
+                             return true;
+                             }
+                       else{return false;}
+        }
+//fin de la fonction joue
+
+
+
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// debut de la fonction demande et joue entre deux joueurs
+
+
+  void demande_et_joue(Grille& grille, Couleur couleur_joueur)
+      {
+            bool valide;
+              /*if (couleur_joueur==jaune)
+              {
+              cout<<"Joueur x: entrez un numéro de colonne"<<endl;
+              }
+              else {
+              cout<<"Joueur o: entrez un numéro de colonne"<<endl;
+              }*/ //on peut reecrire ça comme suit pour éviter la répitition
+
+            cout<<"Joueur" ;
+            cout<<" " ;
+            if (couleur_joueur==jaune)
+                {cout<<"Jaune"<<" "<<" (x)";}
+            else {cout<<"Rouge" <<" "<<"(o)";}
+            cout<<": entrez un numéro de colonne"<<endl;
+            do{
+                  size_t colonne;
+                  cin >> colonne;
+                  --colonne; // on decremente car les indices des tableaux commencent par 0 en c++
+                  valide=joue(grille, colonne, couleur_joueur);
+                  if (!valide)
+                   {cout<<">Ce coup n'est pas valide"<<endl;}
+
+               }while(!valide);
+     }
+
+
+  //fin de la fonction demande_et_joue
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//debut fonction compte//
+
+     // fonction compte  de type unsigned int car le resultat est positif ou nul
+    // mais les indices de directions sont positifs ou negatifs ou nul donc on utilis int
+
+unsigned int compte(const Grille& grille, size_t ligne_depart,  size_t colonne_depart, int direction_ligne, int direction_colonne)
+    {
+          unsigned int compteur(0);
+          size_t ligne(ligne_depart);
+          size_t colonne(colonne_depart);
+
+          while  ((ligne<grille.size()) && (colonne<grille[ligne].size())
+               && (grille[ligne][colonne]==grille[ligne_depart][colonne_depart]))
+             {
+                    ++compteur;
+                    ligne =ligne +direction_ligne;
+                    colonne=colonne+direction_colonne;
+
+              }
+        return compteur;
+
+
+    }
+
+// fin de la fonction compte
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+//// debut de la fonction plein
+
+bool plein(const Grille& grille)
+{//il suffit de verifier si les cases de la premiere ligne sont vides pour savoir si une colonne est pleine
+ for(auto kase: grille[0])
+       { // si on trouve une case vide sur la premiere ligne la grille nest pas pleine
+           if (kase==vide)
+               {return false;}
+       }
+           //sinon la grille est pleine
+ return true;
+}
+
+//fin de la fonction plein//
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+     //debut de la  fonction est ce gange
+
+    bool est_ce_gagne(Grille& grille, Couleur couleur_joueur)
+     {
+
+       for(size_t ligne(0); ligne<grille.size(); ++ligne)
+         {
+              for(size_t colonne(0); colonne<grille[ligne].size(); ++colonne)
+                 {
+                     Couleur couleur_case(grille[ligne][colonne]);
+                     if( couleur_case==couleur_joueur)// si la couleur du pion est la meme que celle du joueur qui vien de jouer
+                     {
+
+                        const size_t ligne_max(grille.size()-4);
+                        const size_t colonne_max(grille[ligne].size()-4);
+
+
+                         //alors on compte les  pions de meme couleur dans les 4 direction haut  droite et 2 diagonale
+                         if( //1*en diag, vers le haut et la droite
+                            ((ligne>=3) && (colonne<=colonne_max) &&(compte(grille, ligne, colonne,-1,+1)>=4)) // car si le nobre de pions de meme couleur > a 4 le joueur a gagné )
+                            //pour calculer la diagonale passer dun pion en bas vers le haut en siag cest faire colonne+1 et ligne-1
+
+
+                           //2* horizontalement, vers la droite on change pas la ligne donc 0 et on va a droite on change la colonne donc c +1
+                        ||  ((colonne<=colonne_max) &&(compte(grille, ligne, colonne, 0, +1)>=4))
+
+                            //3* en diagonale vers le bas et ladroite on fait ligne +1 et colonne +1
+                        ||  ((ligne<=ligne_max) &&(colonne<=colonne_max) && (compte(grille, ligne, colonne, +1, +1)>=4))
+
+
+                            //4* verticalement vers le bas on change pas de colonne et on a ligne+1 car la ligne en haut c ligne 0 on descend on rajoute 1
+                         || ((ligne<=ligne_max) &&(compte(grille, ligne, colonne, +1, 0)>=4))
+                           )
+
+
+                         { return true;}
+
+                     }
+                 }
+
+          }
+          return false;//  si le joueur na pas gagné
+     }
+
+// fin de la fonction est_ce_gagne
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+//////// debut Fonction risque de gagner
+
+    bool risque_gagner_joueur_jaune(Grille& grille, Couleur couleur_joueur)
+     {
+
+       for(size_t ligne(0); ligne<grille.size(); ++ligne)
+         {
+              for(size_t colonne(0); colonne<grille[ligne].size(); ++colonne)
+                 {
+                     Couleur couleur_case(grille[ligne][colonne]);
+                     if( (couleur_case==jaune)&&(couleur_case==couleur_joueur))//
+                     {
+
+                         if( ((compte(grille, ligne, colonne,-1,+1)>=3))||  ((compte(grille, ligne, colonne, 0, +1)>=3))||  ((compte(grille, ligne, colonne, +1, +1)>=3))|| ((compte(grille, ligne, colonne, +1, 0)>=3))
+                           )
+                         { return true;}
+                     }
+                 }
+          }
+          return false;//
+     }
+
+//fin de la fonction reisque_gagne//
+
+
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+///////debut de la fonction demande_et_joue_lordinateur
+
+     void demande_et_joue_lordinateur(Grille& grille, Couleur couleur_joueur)
+      {
+         bool valide;
+
+              if (couleur_joueur==jaune)
+                {   cout<<"Joueur" ;
+                    cout<<"Jaune"<<" "<<" (x)";
+                    cout<<": entrez un numéro de colonne"<<endl;
+
+                    do{
+                           size_t colonne;
+                           cin >> colonne;
+                           --colonne; // on decremente car les indices des tableaux commencent par 0 en c++
+                           valide=joue(grille, colonne, couleur_joueur);
+                           if ( ! valide)
+                                  {
+                                   cout<<">Ce coup n'est pas valide"<<endl;
+                                  }
+                       } while(!valide);
+
+                }
+
+              else {cout<<"Ordinateur" ;
+                    cout<<"Rouge" <<" "<<"(o)";
+
+                    do{
+                           size_t colonne;
+                           colonne=rand()%7+1;
+                           --colonne; // on decremente car les indices des tableaux commencent par 0 en c++
+                            valide=joue(grille, colonne, couleur_joueur);
+                            if ( ! valide)
+                             {
+                             cout<<">Ce coup n'est pas valide"<<endl;
+                             }
+                       } while(!valide);
+              }
+     }
+
+
+////fin de la fonction demande_et_joue_lordinateur//////////////
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+//debut demande_et_joue_lordinateur_max
+
+
+ void demande_et_joue_lordinateur_max(Grille& grille, Couleur couleur_joueur)
+      {
+         bool valide;
+
+              if (couleur_joueur==jaune)
+                {   cout<<"Joueur" ;
+                    cout<<"Jaune"<<" "<<" (x)";
+                    cout<<": entrez un numéro de colonne"<<endl;
+
+                    do{
+                           size_t colonne;
+                           cin >> colonne;
+                           --colonne; // on decremente car les indices des tableaux commencent par 0 en c++
+                           valide=joue(grille, colonne, couleur_joueur);
+                           if ( ! valide)
+                                  {
+                                   cout<<">Ce coup n'est pas valide"<<endl;
+                                  }
+                       } while(!valide && (!plein));
+
+                }
+
+
+
+              else {cout<<"Ordinateur" ;
+                    cout<<"Rouge" <<" "<<"(o)";
+
+                       do { size_t colonne;
+                                colonne=rand()%7+1;
+                                 if (risque_gagner_joueur_jaune(grille, jaune)==true)
+                                 {
+                                     colonne=3;
+                                 }
+
+                                //faut que la colonne joué soit egale au max de la fonction du prof
+
+                            --colonne; // on decremente car les indices des tableaux commencent par 0 en c++
+                            valide=joue(grille, colonne, couleur_joueur);
+
+
+                              if ( ! valide)
+                                {
+                                 cout<<">Ce coup n'est pas valide"<<endl;
+                                 }
+                         } while(! valide &&(!plein));
+              }
+     }
+
+
+//fin demande_et_joue_lordinateur_max
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+////debut de la fonction demande_et_joue_deux_ordinateur//////////////
+
+
+      void demande_et_joue__deux_ordinateur(Grille& grille, Couleur couleur_joueur)
+      {
+         bool valide;
+
+            if (couleur_joueur==jaune)
+                {cout<<"Ordinateur1" ;
+                    cout<<"Jaune" <<" "<<"(x)";}
+            else {cout<<"Ordinateur2" ;
+                    cout<<"Rouge" <<" "<<"(o)";}
+            cout<<": entrez un numéro de colonne"<<endl;
+            do{
+                  size_t colonne;
+                  colonne=rand()%7+1;
+                  --colonne; // on decremente car les indices des tableaux commencent par 0 en c++
+                  valide=joue(grille, colonne, couleur_joueur);
+                  if (!valide)
+                   {cout<<">Ce coup n'est pas valide"<<endl;}
+
+               }while(!valide &&(!plein));
+
+     }
+
+
+////fin de la fonction demande_et_joue_deux_ordinateur//////////////
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+//debut fonction principale main
+
+int main(void)
+{
+            cout<<"Bienvenue au jeu Puissance 4 !"<<endl;
+            cout<<"Veuillez choisir le type de jeu:"<<endl;
+            cout<<"entrez 1 pour joueur VS joueur :"<<endl;
+            cout<<"entrez 2 pour joueur VS ordinateur qui joue aléatoirement:"<<endl;
+            cout<<"entrez 3 pour joueur VS ordinateur qui maximise son score:"<<endl;
+            cout<<"entrez 4 pour ordinateur VS ordinateur:"<<endl;
+            int  type_jeu;
+            cin>>type_jeu;
+
+
+    if (type_jeu == 1) {
+
+
+
+                  initialise(grille);
+                  cout<<"partie entre deux joueurs commence!"<<endl;
+                  affiche(grille);
+
+                   // ces instructions sont pour tester une colonne pleine
+                   /*for(int i(0); i<10;i++)
+
+                   {
+                    bool valide(joue(grille,3,rouge));
+                    if(!valide){cout<<"impossible d'ajouter un pion sur cette colonne"<<endl;}
+                    affiche(grille);
+                     }*/
+
+                    Couleur couleur_joueur(jaune);
+                    cout<<couleur_joueur<<endl;
+
+                    bool gagne;
+
+                    do{
+                             demande_et_joue(grille, couleur_joueur);
+                             affiche(grille);
+                             gagne=est_ce_gagne(grille, couleur_joueur);
+
+
+                              //on change la couleur pour la couleur de l'autre joueur:
+
+                              if(couleur_joueur==jaune)
+                              {couleur_joueur=rouge;}
+                              else
+                              {couleur_joueur=jaune;}
+                        }while(! gagne && !plein(grille));//on repete la boucle tant que le joueur n'a pas gagné
+
+                    if (gagne)
+                         {
+
+                       // attention on a changé la couleur pour la couleur de l'autre joueur
+                        if (couleur_joueur==jaune)
+                        {cout<<"le joueur Rouge (O) a gagne!"<< endl;}
+                        else
+                         {cout<<"le joueur Jaune (X) a gagne!"<< endl;}
+                        }
+                   else
+                        {cout<<"Match nul!"<<endl;}
+
+
+
+
+
+         }
+
+
+
+
+    else if (type_jeu == 2) {
+        cout<<"partie contre l'ordinateur commence!"<<endl;
+        initialise(grille);
+        cout<<"afficher"<<endl;
+        affiche(grille);
+        Couleur couleur_joueur(jaune);
+        cout<<couleur_joueur<<endl;
+
+        bool gagne;
+
+
+
+                          do{
+
+                              demande_et_joue_lordinateur(grille, couleur_joueur);
+                              affiche(grille);
+                              gagne=est_ce_gagne(grille, couleur_joueur);
+
+
+                               //on change la couleur pour la couleur de l'autre joueur:
+
+                               if(couleur_joueur==jaune)
+                               {couleur_joueur=rouge;}
+                               else
+                               {couleur_joueur=jaune;}
+                            }while(! gagne && !plein(grille));//on repete la boucle tant que le joueur n'a pas gagné
+
+                             if (gagne)
+                            {
+
+                            // attention on a changé la couleur pour la couleur de l'autre joueur
+                               if (couleur_joueur==jaune)
+                                      {cout<<"l'ordinateur Rouge (O) a gagne!"<< endl;}
+                               else
+                                   {cout<<"le joueur Jaune (X) a gagne!"<< endl;}
+                             }
+                          else
+                            {cout<<"Match nul!"<<endl;}
+
+               }
+
+
+    else if (type_jeu == 3) {
+        cout<<"partie contre l'ordinateur maximisant son score commence!"<<endl;
+        initialise(grille);
+        cout<<"afficher"<<endl;
+        affiche(grille);
+        Couleur couleur_joueur(jaune);
+        cout<<couleur_joueur<<endl;
+
+        bool gagne;
+
+
+
+                          do{
+
+                              demande_et_joue_lordinateur_max(grille, couleur_joueur);
+                              affiche(grille);
+                              gagne=est_ce_gagne(grille, couleur_joueur);
+
+
+                               //on change la couleur pour la couleur de l'autre joueur:
+
+                               if(couleur_joueur==jaune)
+                               {couleur_joueur=rouge;}
+                               else
+                               {couleur_joueur=jaune;}
+                            }while(! gagne && !plein(grille));//on repete la boucle tant que le joueur n'a pas gagné
+
+                             if (gagne)
+                            {
+
+                            // attention on a changé la couleur pour la couleur de l'autre joueur
+                               if (couleur_joueur==jaune)
+                                      {cout<<"l'ordinateur Rouge (O) a gagne!"<< endl;}
+                               else
+                                   {cout<<"le joueur Jaune (X) a gagne!"<< endl;}
+                             }
+                          else
+                            {cout<<"Match nul!"<<endl;}
+
+               }
+
+
+
+    else {
+
+        cout<<"partie ordinateur contre ordinateur arrive!"<<endl;
+        initialise(grille);
+        cout<<"afficher"<<endl;
+        affiche(grille);
+        Couleur couleur_joueur(jaune);
+        cout<<couleur_joueur<<endl;
+        bool gagne;
+              for(int nb_partie=0; nb_partie<=500; nb_partie++)
+                  {
+                          do{
+                              demande_et_joue__deux_ordinateur(grille, couleur_joueur);
+                              affiche(grille);
+                              gagne=est_ce_gagne(grille, couleur_joueur);
+
+                               //on change la couleur pour la couleur de l'autre joueur:
+
+                                if(couleur_joueur==jaune)
+                                {couleur_joueur=rouge;}
+                                else
+                                {couleur_joueur=jaune;}
+                               }while(!plein(grille) &&! gagne  );//on repete la boucle tant que le joueur n'a pas gagné
+
+                         if (gagne)
+                                  {// attention on a changé la couleur pour la couleur de l'autre joueur
+                                   if (couleur_joueur==jaune)
+                                   {cout<<"la partie"<<nb_partie <<" "":"" "<<"Ordinateur Rouge o a gagne!"<< endl;}
+                                   else
+                                   {cout<<"la partie"<<nb_partie <<" "":"" "<<" Ordinateur Jaune x a gagne!"<< endl;}
+                                  }
+                          else
+                               {cout<<"la partie"<<nb_partie <<" "":"" "<<"Match nul!"<<endl;}
+                          }
+    }
+
+
+  return 0;
+}
+
+//fin du programme//
+
+
