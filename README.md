@@ -1,5 +1,4 @@
 # Puissance-4-C-
-Algorithme C++ joue à Puissance 4
 en compilant le programme sur CodeBlocks:
 
 Un message sera affiché: bienvenu au jeu puissance 4
